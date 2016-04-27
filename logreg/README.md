@@ -54,7 +54,7 @@ The following table yields the results with different minimization methods of cl
 
 ##Problem 11:
 
-The final weights for gradient descent are visualized in the file repflds.png. The results of minimization with adam are in repfls_adam.png. In that concrete run a test error of 7.200000 % could be reached. The better results of the adam minimization can also be seen in the pictures. Whereas the representations of the run with gradient descent is more heterogen, the weights of adam minimization appear more homogenious.
+The final weights for gradient descent are visualized in the file repflds.png. The results of minimization with adam are in repfls_adam.png. In that concrete run a test error of 7.200000 % could be reached. The better results of the adam minimization can also be seen in the pictures. Whereas the representations of the run with gradient descent is more patchy, the weights of adam minimization appear more clearer an brighter. With this method the weights could be better adjusted to the important dimensions of the MNIST data. 
 
 ##Problem 12:
 
