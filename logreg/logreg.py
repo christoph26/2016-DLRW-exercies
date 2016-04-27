@@ -5,7 +5,6 @@ import os
 import sys
 import timeit
 import gzip
-from data import load_data
 
 import numpy as np
 
@@ -387,10 +386,10 @@ if __name__ == "__main__":
     plt.savefig('Varying_with_same_parameter.png')
     """
 
-    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.55, optimizer='adam') #batch_size=None
+    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.55, optimizer='gd') #batch_size=None
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
-    #"""
+    """
     # Plot of the error rates of gradient descent.
 
     plt.plot(gd_train_loss, '-', linewidth = 1, label = 'train error')
@@ -400,7 +399,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.set_title('Adam')
     plt.savefig('errors.png')
-    #"""
+    """
 
     """
     # Plot of the error rates of different minimization methods
