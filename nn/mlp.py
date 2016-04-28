@@ -246,28 +246,35 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
     tmpl = [(28 * 28, n_hidden), n_hidden, (n_hidden, 10), 10]
     flat, (Weights_1, bias_1, Weights_2, bias_2) = climin.util.empty_with_views(tmpl)
 
-    cli.initialize.randomize_normal(flat, 0, 1)  # initialize the parameters with random numbers
+    #cli.initialize.randomize_normal(flat, 0, 1)  # initialize the parameters with random numbers
 
-    """
-    #TODO: Initialize weights with uniformal distribution according to the tutorial
+
+    #Initialize weights with uniformal distribution according to the tutorial
     rng = numpy.random.RandomState(1234)
-    Weights_1 = rng.uniform(
+    Weights_1_init = rng.uniform(
         low=-numpy.sqrt(6. / (28*28 + n_hidden)),
         high=numpy.sqrt(6. / (28*28 + n_hidden)),
         size=(28*28, n_hidden)
     )
 
-    Weights_2 = rng.uniform(
+    Weights_2_init = rng.uniform(
         low=-numpy.sqrt(6. / (n_hidden+10)),
         high=numpy.sqrt(6. / (n_hidden+10)),
         size=(n_hidden, 10)
     )
 
-    bias_1 = numpy.zeros((n_hidden,), dtype=theano.config.floatX)
-    bias_2 = numpy.zeros((10,), dtype=theano.config.floatX)
+    bias_1_init = numpy.zeros((n_hidden,), dtype=theano.config.floatX)
+    bias_2_init = numpy.zeros((10,), dtype=theano.config.floatX)
 
-    flat = numpy.concatenate([Weights_1.flatten(), bias_1, Weights_2.flatten(), bias_2])
-    """
+    def initialize_in_place(array, values):
+        for j in range(0, len(values)):
+            array[j] = values[j]
+
+    initialize_in_place(Weights_1, Weights_1_init)
+    initialize_in_place(Weights_2, Weights_2_init)
+    initialize_in_place(bias_1, bias_1_init)
+    initialize_in_place(bias_2, bias_2_init)
+
 
     if batch_size is None:
         args = itertools.repeat(([train_set_x, train_set_y], {}))
@@ -469,7 +476,8 @@ if __name__ == '__main__':
     plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
 
     plt.legend()
-    plt.savefig('error_gd_l1_reg=001.0_l2_reg=0.0001.png')
+    plt.suptitle('gd-MLP with l1_reg=0.001, l2_reg=0.0001, 300 tanh inner neurons')
+    plt.savefig('error_gd_adjusted_init_weights_1.png')
 
     f_repfields, subplot_array = plt.subplots(15, 20)
     weights = gd_mlp.hiddenLayer.W.get_value().transpose()
@@ -481,4 +489,5 @@ if __name__ == '__main__':
         subplot_array[row][column].imshow(weights[i].reshape((28,28)), cmap = 'Greys_r')
         subplot_array[row][column].axis('off')
 
-    plt.savefig('repfields_gd_l1_reg=0.001_l2_reg=0.0001.png')
+    plt.suptitle('gd-MLP with l1_reg=0.001, l2_reg=0.0001, 300 tanh inner neurons')
+    plt.savefig('repfields_gd_adjusted_init_weights_1.png')
