@@ -246,7 +246,28 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
     tmpl = [(28 * 28, n_hidden), n_hidden, (n_hidden, 10), 10]
     flat, (Weights_1, bias_1, Weights_2, bias_2) = climin.util.empty_with_views(tmpl)
 
-    cli.initialize.randomize_normal(flat, 0, 0.1)  # initialize the parameters with random numbers
+    cli.initialize.randomize_normal(flat, 0, 1)  # initialize the parameters with random numbers
+
+    """
+    #TODO: Initialize weights with uniformal distribution according to the tutorial
+    rng = numpy.random.RandomState(1234)
+    Weights_1 = rng.uniform(
+        low=-numpy.sqrt(6. / (28*28 + n_hidden)),
+        high=numpy.sqrt(6. / (28*28 + n_hidden)),
+        size=(28*28, n_hidden)
+    )
+
+    Weights_2 = rng.uniform(
+        low=-numpy.sqrt(6. / (n_hidden+10)),
+        high=numpy.sqrt(6. / (n_hidden+10)),
+        size=(n_hidden, 10)
+    )
+
+    bias_1 = numpy.zeros((n_hidden,), dtype=theano.config.floatX)
+    bias_2 = numpy.zeros((10,), dtype=theano.config.floatX)
+
+    flat = numpy.concatenate([Weights_1.flatten(), bias_1, Weights_2.flatten(), bias_2])
+    """
 
     if batch_size is None:
         args = itertools.repeat(([train_set_x, train_set_y], {}))
@@ -434,6 +455,30 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
            os.path.split(__file__)[1] +
            ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
 
+    losses = (train_losses, valid_losses, test_losses)
+
+    return classifier, losses
 
 if __name__ == '__main__':
-    test_mlp(optimizer='rmsprop', n_hidden=300, L1_reg=0.1, L2_reg=0.01, activation=T.tanh)
+
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.001, L2_reg=0.0001, activation=T.tanh, n_epochs=500)
+    gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
+
+    plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
+    plt.plot(gd_valid_loss, '-', linewidth=1, label='validation error')
+    plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
+
+    plt.legend()
+    plt.savefig('error_gd_l1_reg=001.0_l2_reg=0.0001.png')
+
+    f_repfields, subplot_array = plt.subplots(15, 20)
+    weights = gd_mlp.hiddenLayer.W.get_value().transpose()
+
+    for i in range(0,300):
+        row = i/20
+        column = i % 20
+
+        subplot_array[row][column].imshow(weights[i].reshape((28,28)), cmap = 'Greys_r')
+        subplot_array[row][column].axis('off')
+
+    plt.savefig('repfields_gd_l1_reg=0.001_l2_reg=0.0001.png')
