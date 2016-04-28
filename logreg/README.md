@@ -54,9 +54,13 @@ The following table yields the results with different minimization methods of cl
 
 ##Problem 11:
 
-The final weights for gradient descent are visualized in the file repflds.png. The results of minimization with adam are in repfls_adam.png. In that concrete run a test error of 7.200000 % could be reached. The better results of the adam minimization can also be seen in the pictures. Whereas the representations of the run with gradient descent is more patchy, the weights of adam minimization appear more clearer an brighter. With this method the weights could be better adjusted to the important dimensions of the MNIST data. 
+The final weights for gradient descent are visualized in the file repflds.png. The results of minimization with adam are in repfls_adam.png. In that concrete run a test error of 7.200000 % could be reached. The better results of the adam minimization can also be seen in the pictures. Whereas the representations of the run with gradient descent is more patchy, the weights of adam minimization appear more clearer an brighter. Appearently, with this method the weights could be better adjusted to the important dimensions of the MNIST data. 
 
 ##Problem 12:
+The error courves of gd, rmsprop, rprop, adam and adadelta are compared in the plot errors_comparison.png. Whereas the plot is too small to give quantitative error rates, it gives a good overview about the general shape of error courves and expected number of epochs.
 
+More detailled information is displayed in the files error_gd.png, error_adam.png, error_rmsprop.png, error_rprop.png and error_adadelta.png.
+
+The implementation uses early stopping. Minimization is done as long as significant improvements of the validation errors are archieved. A significant improvement is an minimzation, which improves the currently best validation loss with at least 5%. Concrete this means, that each time, significant improvement of the validation loss was found, the maximal number of minibatches (called "patience" is the implementation) is adjusted, so that the same number of minibatch optimization, which has already been performed, will be performed again.
 
 
