@@ -23,7 +23,7 @@ from __future__ import print_function
 
 __docformat__ = 'restructedtext en'
 
-
+import six.moves.cPickle as pickle
 import os
 import sys
 import timeit
@@ -33,6 +33,12 @@ import numpy
 import theano
 import theano.tensor as T
 
+import climin as cli
+import climin.initialize as init
+import climin.util
+import itertools
+
+import matplotlib.pyplot as plt
 
 from logistic_sgd import LogisticRegression, load_data
 
@@ -123,7 +129,7 @@ class MLP(object):
     class).
     """
 
-    def __init__(self, rng, input, n_in, n_hidden, n_out):
+    def __init__(self, rng, input, n_in, n_hidden, n_out, Weights_1, bias_1, Weights_2, bias_2, activation=T.tanh):
         """Initialize the parameters for the multilayer perceptron
 
         :type rng: numpy.random.RandomState
@@ -155,7 +161,9 @@ class MLP(object):
             input=input,
             n_in=n_in,
             n_out=n_hidden,
-            activation=T.tanh
+            activation=activation,
+            W=Weights_1,
+            b=bias_1
         )
 
         # The logistic regression layer gets as input the hidden units
@@ -163,7 +171,9 @@ class MLP(object):
         self.logRegressionLayer = LogisticRegression(
             input=self.hiddenLayer.output,
             n_in=n_hidden,
-            n_out=n_out
+            n_out=n_out,
+            W=Weights_2,
+            b=bias_2
         )
         # end-snippet-2 start-snippet-3
         # L1 norm ; one regularization option is to enforce L1 norm to
@@ -199,7 +209,7 @@ class MLP(object):
 
 
 def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
-             dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
+             dataset='mnist.pkl.gz', batch_size=20, n_hidden=500, optimizer='gd', activation=T.tanh):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
     perceptron
@@ -233,10 +243,19 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
 
-    # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.get_value(borrow=True).shape[0] // batch_size
-    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] // batch_size
-    n_test_batches = test_set_x.get_value(borrow=True).shape[0] // batch_size
+    tmpl = [(28 * 28, n_hidden), n_hidden, (n_hidden, 10), 10]
+    flat, (Weights_1, bias_1, Weights_2, bias_2) = climin.util.empty_with_views(tmpl)
+
+    cli.initialize.randomize_normal(flat, 0, 0.1)  # initialize the parameters with random numbers
+
+    if batch_size is None:
+        args = itertools.repeat(([train_set_x, train_set_y], {}))
+        n_train_batches = 1
+    else:
+        args = cli.util.iter_minibatches([train_set_x, train_set_y], batch_size, [0, 0])
+        args = ((i, {}) for i in args)
+        n_train_batches = train_set_x.shape[0] // batch_size
+
 
     ######################
     # BUILD ACTUAL MODEL #
@@ -257,154 +276,164 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
         input=x,
         n_in=28 * 28,
         n_hidden=n_hidden,
-        n_out=10
+        n_out=10,
+        Weights_1=theano.shared(value = Weights_1, name = 'W', borrow = True),
+        bias_1=theano.shared(value = bias_1, name = 'b', borrow = True),
+        Weights_2=theano.shared(value = Weights_2, name = 'W', borrow = True),
+        bias_2=theano.shared(value = bias_2, name = 'b', borrow = True),
+        activation=T.tanh
+    )
+
+    gradients = theano.function(
+        inputs=[x, y],
+        outputs=[
+            T.grad(classifier.negative_log_likelihood(y), classifier.hiddenLayer.W),
+            T.grad(classifier.negative_log_likelihood(y), classifier.hiddenLayer.b),
+            T.grad(classifier.negative_log_likelihood(y), classifier.logRegressionLayer.W),
+            T.grad(classifier.negative_log_likelihood(y), classifier.logRegressionLayer.b)
+        ],
+        allow_input_downcast=True
     )
 
     # start-snippet-4
     # the cost we minimize during training is the negative log likelihood of
     # the model plus the regularization terms (L1 and L2); cost is expressed
     # here symbolically
-    cost = (
-        classifier.negative_log_likelihood(y)
-        + L1_reg * classifier.L1
-        + L2_reg * classifier.L2_sqr
+    cost = theano.function(
+        inputs=[x, y],
+        outputs=classifier.negative_log_likelihood(y) + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr,
+        allow_input_downcast=True
     )
     # end-snippet-4
 
-    # compiling a Theano function that computes the mistakes that are made
-    # by the model on a minibatch
-    test_model = theano.function(
-        inputs=[index],
+    def loss(parameters, input, target):
+        #Weights, bias = climin.util.shaped_from_flat(parameters, tmpl)
+
+        return cost(input, target)
+
+    def d_loss_wrt_pars(parameters, inputs, targets):
+        #Weights, bias = climin.util.shaped_from_flat(parameters, tmpl)
+
+        g_W_1, g_b_1, g_W_2, g_b_2 = gradients(inputs, targets)
+
+        return numpy.concatenate([g_W_1.flatten(), g_b_1, g_W_2.flatten(), g_b_2])
+
+    zero_one_loss = theano.function(
+        inputs=[x, y],
         outputs=classifier.errors(y),
-        givens={
-            x: test_set_x[index * batch_size:(index + 1) * batch_size],
-            y: test_set_y[index * batch_size:(index + 1) * batch_size]
-        }
+        allow_input_downcast=True
     )
 
-    validate_model = theano.function(
-        inputs=[index],
-        outputs=classifier.errors(y),
-        givens={
-            x: valid_set_x[index * batch_size:(index + 1) * batch_size],
-            y: valid_set_y[index * batch_size:(index + 1) * batch_size]
-        }
-    )
+    if optimizer == 'gd':
+        print('... using gradient descent')
+        opt = cli.GradientDescent(flat, d_loss_wrt_pars, step_rate=learning_rate, momentum=.95, args=args)
+    elif optimizer == 'bfgs':
+        print('... using using quasi-newton BFGS')
+        opt = cli.Bfgs(flat, loss, d_loss_wrt_pars, args=args)
+    elif optimizer == 'lbfgs':
+        print('... using using quasi-newton L-BFGS')
+        opt = cli.Lbfgs(flat, loss, d_loss_wrt_pars, args=args)
+    elif optimizer == 'nlcg':
+        print('... using using non linear conjugate gradient')
+        opt = cli.NonlinearConjugateGradient(flat, loss, d_loss_wrt_pars, min_grad=1e-03, args=args)
+    elif optimizer == 'rmsprop':
+        print('... using rmsprop')
+        opt = cli.RmsProp(flat, d_loss_wrt_pars, step_rate=1e-4, decay=0.9, args=args)
+    elif optimizer == 'rprop':
+        print('... using resilient propagation')
+        opt = cli.Rprop(flat, d_loss_wrt_pars, args=args)
+    elif optimizer == 'adam':
+        print('... using adaptive momentum estimation optimizer')
+        opt = cli.Adam(flat, d_loss_wrt_pars, step_rate=0.0002, decay=0.99999999, decay_mom1=0.1, decay_mom2=0.001,
+                       momentum=0, offset=1e-08, args=args)
+    elif optimizer == 'adadelta':
+        print('... using adadelta')
+        opt = cli.Adadelta(flat, d_loss_wrt_pars, step_rate=1, decay=0.9, momentum=.95, offset=0.0001, args=args)
+    else:
+        print('unknown optimizer')
+        return 1
 
-    # start-snippet-5
-    # compute the gradient of cost with respect to theta (sorted in params)
-    # the resulting gradients will be stored in a list gparams
-    gparams = [T.grad(cost, param) for param in classifier.params]
-
-    # specify how to update the parameters of the model as a list of
-    # (variable, update expression) pairs
-
-    # given two lists of the same length, A = [a1, a2, a3, a4] and
-    # B = [b1, b2, b3, b4], zip generates a list C of same size, where each
-    # element is a pair formed from the two lists :
-    #    C = [(a1, b1), (a2, b2), (a3, b3), (a4, b4)]
-    updates = [
-        (param, param - learning_rate * gparam)
-        for param, gparam in zip(classifier.params, gparams)
-    ]
-
-    # compiling a Theano function `train_model` that returns the cost, but
-    # in the same time updates the parameter of the model based on the rules
-    # defined in `updates`
-    train_model = theano.function(
-        inputs=[index],
-        outputs=cost,
-        updates=updates,
-        givens={
-            x: train_set_x[index * batch_size: (index + 1) * batch_size],
-            y: train_set_y[index * batch_size: (index + 1) * batch_size]
-        }
-    )
-    # end-snippet-5
 
     ###############
     # TRAIN MODEL #
     ###############
     print('... training')
 
-    # early-stopping parameters
-    patience = 10000  # look as this many examples regardless
-    patience_increase = 2  # wait this much longer when a new best is
-                           # found
-    improvement_threshold = 0.995  # a relative improvement of this much is
-                                   # considered significant
-    validation_frequency = min(n_train_batches, patience // 2)
-                                  # go through this many
-                                  # minibatche before checking the network
-                                  # on the validation set; in this case we
-                                  # check every epoch
+    # early stopping parameters
+    if batch_size == None:
+        patience = 250
+    else:
+        patience = 10000  # look at this many samples regardless
 
+    patience_increase = 2  # wait this mutch longer when a new best is found
+    improvement_threshold = 0.995  # a relative improvement of this mutch is considered signigicant
+    validation_frequency = min(n_train_batches, patience // 2)
     best_validation_loss = numpy.inf
-    best_iter = 0
-    test_score = 0.
-    start_time = timeit.default_timer()
+    test_loss = 0.
+
+    valid_losses = []
+    train_losses = []
+    test_losses = []
 
     epoch = 0
-    done_looping = False
 
-    while (epoch < n_epochs) and (not done_looping):
-        epoch = epoch + 1
-        for minibatch_index in range(n_train_batches):
+    start_time = timeit.default_timer()
 
-            minibatch_avg_cost = train_model(minibatch_index)
-            # iteration number
-            iter = (epoch - 1) * n_train_batches + minibatch_index
+    for info in opt:
+        iter = info['n_iter']
+        epoch = iter // n_train_batches
+        minibatch_index = iter % n_train_batches
+        minibatch_x, minibatch_y = info['args']
 
-            if (iter + 1) % validation_frequency == 0:
-                # compute zero-one loss on validation set
-                validation_losses = [validate_model(i) for i
-                                     in range(n_valid_batches)]
-                this_validation_loss = numpy.mean(validation_losses)
+        minibatch_avarage_cost = cost(minibatch_x, minibatch_y)
+        if iter % validation_frequency == 0:
+            # compute zero-one loss on validation set
+            validation_loss = zero_one_loss(valid_set_x, valid_set_y)
+            valid_losses.append(validation_loss)
+            train_losses.append(zero_one_loss(train_set_x, train_set_y))
+            test_losses.append(zero_one_loss(test_set_x, test_set_y))
+
+            print(
+                'epoch %i, minibatch %i/%i, validation error % f %%, iter/patience %i/%i' %
+                (
+                    epoch,
+                    minibatch_index + 1,
+                    n_train_batches,
+                    validation_loss * 100,
+                    iter,
+                    patience
+                )
+            )
+            # if we got the best validation score until now
+            if validation_loss < best_validation_loss:
+                # improve patience if loss improvement is good enough
+                if validation_loss < best_validation_loss * improvement_threshold:
+                    patience = max(patience, iter * patience_increase)
+                best_validation_loss = validation_loss
+                # test it on the test set
+                test_loss = zero_one_loss(test_set_x, test_set_y)
 
                 print(
-                    'epoch %i, minibatch %i/%i, validation error %f %%' %
+                    '    epoch %i, minibatch %i/%i, test error of best model %f %%' %
                     (
                         epoch,
                         minibatch_index + 1,
                         n_train_batches,
-                        this_validation_loss * 100.
+                        test_loss * 100
                     )
                 )
 
-                # if we got the best validation score until now
-                if this_validation_loss < best_validation_loss:
-                    #improve patience if loss improvement is good enough
-                    if (
-                        this_validation_loss < best_validation_loss *
-                        improvement_threshold
-                    ):
-                        patience = max(patience, iter * patience_increase)
 
-                    best_validation_loss = this_validation_loss
-                    best_iter = iter
-
-                    # test it on the test set
-                    test_losses = [test_model(i) for i
-                                   in range(n_test_batches)]
-                    test_score = numpy.mean(test_losses)
-
-                    print(('     epoch %i, minibatch %i/%i, test error of '
-                           'best model %f %%') %
-                          (epoch, minibatch_index + 1, n_train_batches,
-                           test_score * 100.))
-
-            if patience <= iter:
-                done_looping = True
-                break
+        if patience <= iter or epoch >= n_epochs:
+            break
 
     end_time = timeit.default_timer()
-    print(('Optimization complete. Best validation score of %f %% '
-           'obtained at iteration %i, with test performance %f %%') %
-          (best_validation_loss * 100., best_iter + 1, test_score * 100.))
+    print(('Optimization complete. Best validation score of %f %% with test performance %f %%') %
+          (best_validation_loss * 100., test_loss * 100.))
     print(('The code for file ' +
            os.path.split(__file__)[1] +
            ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
 
 
 if __name__ == '__main__':
-    test_mlp()
+    test_mlp(optimizer='rmsprop', n_hidden=300, L1_reg=0.1, L2_reg=0.01, activation=T.tanh)
