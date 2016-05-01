@@ -266,6 +266,10 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
     bias_1_init = numpy.zeros((n_hidden,), dtype=theano.config.floatX)
     bias_2_init = numpy.zeros((10,), dtype=theano.config.floatX)
 
+    if activation == T.nnet.sigmoid:
+        Weights_1_init *= 4
+        Weights_2_init *= 4
+
     def initialize_in_place(array, values):
         for j in range(0, len(values)):
             array[j] = values[j]
@@ -468,7 +472,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
 
 if __name__ == '__main__':
 
-    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.001, L2_reg=0.0001, activation=T.tanh, n_epochs=500)
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=1.0, L2_reg=0.00, activation=T.tanh, n_epochs=300)
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
@@ -476,8 +480,8 @@ if __name__ == '__main__':
     plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
 
     plt.legend()
-    plt.suptitle('gd-MLP with l1_reg=0.001, l2_reg=0.0001, 300 tanh inner neurons')
-    plt.savefig('error_gd_adjusted_init_weights_1.png')
+    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=0.00, 300 tanh inner neurons')
+    plt.savefig('error_gd_adjusted_init_weights_4.png')
 
     f_repfields, subplot_array = plt.subplots(15, 20)
     weights = gd_mlp.hiddenLayer.W.get_value().transpose()
@@ -489,5 +493,58 @@ if __name__ == '__main__':
         subplot_array[row][column].imshow(weights[i].reshape((28,28)), cmap = 'Greys_r')
         subplot_array[row][column].axis('off')
 
-    plt.suptitle('gd-MLP with l1_reg=0.001, l2_reg=0.0001, 300 tanh inner neurons')
-    plt.savefig('repfields_gd_adjusted_init_weights_1.png')
+    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=0.00, 300 tanh inner neurons')
+    plt.savefig('repfields_gd_adjusted_init_weights_4.png')
+
+    plt.clf()
+
+
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=1.0, L2_reg=1.00, activation=T.tanh, n_epochs=300)
+    gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
+
+    plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
+    plt.plot(gd_valid_loss, '-', linewidth=1, label='validation error')
+    plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
+
+    plt.legend()
+    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=1.00, 300 tanh inner neurons')
+    plt.savefig('error_gd_adjusted_init_weights_5.png')
+
+    f_repfields, subplot_array = plt.subplots(15, 20)
+    weights = gd_mlp.hiddenLayer.W.get_value().transpose()
+
+    for i in range(0, 300):
+        row = i / 20
+        column = i % 20
+
+        subplot_array[row][column].imshow(weights[i].reshape((28, 28)), cmap='Greys_r')
+        subplot_array[row][column].axis('off')
+
+    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=1.00, 300 tanh inner neurons')
+    plt.savefig('repfields_gd_adjusted_init_weights_5.png')
+
+    plt.clf()
+
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=1.00, activation=T.tanh, n_epochs=300)
+    gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
+
+    plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
+    plt.plot(gd_valid_loss, '-', linewidth=1, label='validation error')
+    plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
+
+    plt.legend()
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 tanh inner neurons')
+    plt.savefig('error_gd_adjusted_init_weights_6.png')
+
+    f_repfields, subplot_array = plt.subplots(15, 20)
+    weights = gd_mlp.hiddenLayer.W.get_value().transpose()
+
+    for i in range(0, 300):
+        row = i / 20
+        column = i % 20
+
+        subplot_array[row][column].imshow(weights[i].reshape((28, 28)), cmap='Greys_r')
+        subplot_array[row][column].axis('off')
+
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 tanh inner neurons')
+    plt.savefig('repfields_gd_adjusted_init_weights_6.png')
