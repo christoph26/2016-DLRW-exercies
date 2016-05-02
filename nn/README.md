@@ -10,6 +10,9 @@ l1_reg, l2_reg: factors for l1 and l2 regularization
 n_hidden: number neurons in the hidden layer,
 optimizer: name of the climin optimizer, which should be used. Possiblilties are "gd", "rprop", "rmsprop", etc.
 activation: activation function for the hidden layer.
+batch_size: batch size
+n_epochs: maximal number of epochs.
+
 
 ##Problem 15
 
