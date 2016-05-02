@@ -17,8 +17,6 @@ import climin.util
 import itertools
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -159,10 +157,6 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
 
     cli.initialize.randomize_normal(flat, 0, 0.1) # initialize the parameters with random numbers
 
-    #args = cli.util.iter_minibatches([train_set_x, train_set_y], batch_size, [0, 0])
-    #args = ((i, {}) for i in args)
-    #n_train_batches = train_set_x.shape[0] // batch_size
-
     if batch_size is None:
         args = itertools.repeat(([train_set_x, train_set_y], {}))
         n_train_batches = 1
@@ -263,7 +257,6 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
     train_losses = []
     test_losses = []
 
-    done_looping = False
     epoch = 0
 
     start_time = timeit.default_timer()
@@ -396,9 +389,9 @@ if __name__ == "__main__":
     plt.plot(gd_valid_loss, '-', linewidth = 1, label = 'validation error')
     plt.plot(gd_test_loss, '-', linewidth = 1, label = 'test error')
 
+
     plt.legend()
-    plt.set_title('Adam')
-    plt.savefig('errors.png')
+    plt.savefig('error_gd.png')
     """
 
     """
