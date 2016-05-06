@@ -12,14 +12,13 @@ def load_data(dataset):
     ''' Loads the dataset
 
     :type dataset: string
-    :param dataset: the path to the dataset (here MNIST)
+    :param dataset: the path to the dataset
     '''
 
     #############
     # LOAD DATA #
     #############
 
-    # Download the MNIST dataset if it is not present
     data_dir, data_file = os.path.split(dataset)
     if data_dir == "" and not os.path.isfile(dataset):
         # Check if dataset is in the data directory.
@@ -49,7 +48,7 @@ def load_data(dataset):
         urllib.request.urlretrieve(origin, dataset)
 
         import tarfile
-        tar = tarfile.open("cifar-10-python.tar.gz")
+        tar = tarfile.open(dataset)
         tar.extractall()
         tar.close()
 
@@ -77,9 +76,9 @@ def load_data(dataset):
             fo.close()
             return dict
 
-        d = unpickle('cifar-10-batches-py/data_batch_1')
-        d2 = unpickle('cifar-10-batches-py/data_batch_1')
-        d3 = unpickle('cifar-10-batches-py/data_batch_1')
+        d = unpickle('../data/cifar-10-batches-py/data_batch_1')
+        d2 = unpickle('../data/cifar-10-batches-py/data_batch_1')
+        d3 = unpickle('../data/cifar-10-batches-py/data_batch_1')
 
 
         train_set_x = np.asarray(d['data'])
@@ -156,7 +155,8 @@ def doPCAScatterplot(dataset='mnist.pkl.gz', n_samples=30000):
             plots[j, i].set_ylabel(j)
 
     plt.tight_layout()
-    plt.savefig("scatterplotCIFAR4.png")
-    #plt.savefig("scatterplotNMIST4.png")
+    #plt.savefig("scatterplotCIFAR.png")
+    plt.savefig("scatterplotNMIST.png")
 
-doPCAScatterplot("cifar-10-python.tar.gz")
+#doPCAScatterplot('cifar-10-python.tar.gz')
+doPCAScatterplot('mnist.pkl.gz')
