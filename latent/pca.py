@@ -49,7 +49,7 @@ def load_data(dataset):
 
         import tarfile
         tar = tarfile.open(dataset)
-        tar.extractall()
+        tar.extractall(path='../data')
         tar.close()
 
     print('... loading data')
