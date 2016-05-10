@@ -16,35 +16,14 @@ import climin.initialize as init
 import climin.util
 import itertools
 
+from load_data import load_data
+
 import matplotlib.pyplot as plt
 
 class LogisticRegression(object):
-    """Multi-class Logistic Regression Class
-
-    The logistic regression is fully described by a weight matrix :math:`W`
-    and bias vector :math:`b`. Classification is done by projecting data
-    points onto a set of hyperplanes, the distance to which is used to
-    determine a class membership probability.
-    """
 
     def __init__(self, input, n_in, n_out, W = None, b = None):
-        """ Initialize the parameters of the logistic regression
 
-        :type input: theano.tensor.TensorType
-        :param input: symbolic variable that describes the input of the
-                      architecture (one minibatch)
-
-        :type n_in: int
-        :param n_in: number of input units, the dimension of the space in
-                     which the datapoints lie
-
-        :type n_out: int
-        :param n_out: number of output units, the dimension of the space in
-                      which the labels lie
-
-        """
-        # start-snippet-1
-        # initialize with 0 the weights W as a matrix of shape (n_in, n_out)
         if W is None:
             W_values = np.zeros((n_in, n_out), dtype = theano.config.floatX)
             W = theano.shared(value = W_values, name = 'W', borrow = True )
@@ -56,20 +35,11 @@ class LogisticRegression(object):
         self.W = W
         self.b = b
 
-        # symbolic expression for computing the matrix of class-membership
-        # probabilities
-        # Where:
-        # W is a matrix where column-k represent the separation hyperplane for
-        # class-k
-        # x is a matrix where row-j  represents input training sample-j
-        # b is a vector where element-k represent the free parameter of
-        # hyperplane-k
         self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
         self.y_pred = T.argmax(self.p_y_given_x, axis=1)
-        # end-snippet-1
 
         # parameters of the model
         self.params = [self.W, self.b]
@@ -95,55 +65,6 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-def load_data(dataset):
-    ''' Loads the dataset
-
-    :type dataset: string
-    :param dataset: the path to the dataset (here MNIST)
-    '''
-
-    #############
-    # LOAD DATA #
-    #############
-
-    # Download the MNIST dataset if it is not present
-    data_dir, data_file = os.path.split(dataset)
-    if data_dir == "" and not os.path.isfile(dataset):
-        # Check if dataset is in the data directory.
-        new_path = os.path.join(
-            os.path.split(__file__)[0],
-            "..",
-            "data",
-            dataset
-        )
-        if os.path.isfile(new_path) or data_file == 'mnist.pkl.gz':
-            dataset = new_path
-
-    if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
-        from six.moves import urllib
-        origin = (
-            'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
-        )
-        print('Downloading data from %s' % origin)
-        urllib.request.urlretrieve(origin, dataset)
-
-    print('... loading data')
-
-    # Load the dataset
-    with gzip.open(dataset, 'rb') as f:
-        try:
-            train_set, valid_set, test_set = pickle.load(f, encoding='latin1')
-        except:
-            train_set, valid_set, test_set = pickle.load(f)
-
-    test_set_x, test_set_y = test_set
-    valid_set_x, valid_set_y = valid_set
-    train_set_x, train_set_y = train_set
-
-    rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
-            (test_set_x, test_set_y)]
-    return rval
-
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl.gz', batch_size=600, optimizer='gd'):
 
     datasets = load_data(dataset)
@@ -155,7 +76,7 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
     tmpl = [(28 * 28, 10), 10]
     flat, (Weights, bias) = climin.util.empty_with_views(tmpl)
 
-    cli.initialize.randomize_normal(flat, 0, 0.1) # initialize the parameters with random numbers
+    cli.initialize.randomize_normal(flat, 0, 1)
 
     if batch_size is None:
         args = itertools.repeat(([train_set_x, train_set_y], {}))
@@ -167,8 +88,8 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
 
     print('... building the model')
 
-    x = T.matrix('x') # data, represented as rasterized images dimension 28 * 28
-    y = T.ivector('y') # labes, represented as 1D vector of [int] labels dimension 10
+    x = T.matrix('x')
+    y = T.ivector('y')
 
     classifier = LogisticRegression(
             input = x,
@@ -194,13 +115,9 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
     )
 
     def loss(parameters, input, target):
-        Weights, bias = climin.util.shaped_from_flat(parameters, tmpl)
-
         return cost(input, target)
 
     def d_loss_wrt_pars(parameters, inputs, targets):
-        Weights, bias = climin.util.shaped_from_flat(parameters, tmpl)
-
         g_W, g_b = gradients(inputs, targets)
 
         return np.concatenate([g_W.flatten(), g_b])
@@ -214,15 +131,6 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
     if optimizer == 'gd':
         print('... using gradient descent')
         opt = cli.GradientDescent(flat, d_loss_wrt_pars, step_rate=learning_rate, momentum=.95, args=args)
-    elif optimizer == 'bfgs':
-        print('... using using quasi-newton BFGS')
-        opt = cli.Bfgs(flat, loss, d_loss_wrt_pars, args=args)
-    elif optimizer == 'lbfgs':
-        print('... using using quasi-newton L-BFGS')
-        opt = cli.Lbfgs(flat, loss, d_loss_wrt_pars, args=args)
-    elif optimizer == 'nlcg':
-        print('... using using non linear conjugate gradient')
-        opt = cli.NonlinearConjugateGradient(flat, loss, d_loss_wrt_pars,  min_grad=1e-03, args=args)
     elif optimizer == 'rmsprop':
         print('... using rmsprop')
         opt = cli.RmsProp(flat, d_loss_wrt_pars, step_rate=1e-4, decay=0.9, args=args)
@@ -264,9 +172,7 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
         iter = info['n_iter']
         epoch = iter // n_train_batches
         minibatch_index = iter % n_train_batches
-        minibatch_x, minibatch_y = info['args']
 
-        minibatch_avarage_cost = cost(minibatch_x, minibatch_y)
         if iter % validation_frequency == 0:
             # compute zero-one loss on validation set
             validation_loss = zero_one_loss(valid_set_x, valid_set_y)
@@ -304,9 +210,6 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
                             )
                         )
 
-                with open('best_model.pkl', 'wb') as f:
-                    pickle.dump(classifier, f)
-
         if patience <= iter or epoch >= n_epochs:
             break
 
@@ -319,30 +222,6 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl
     losses = (train_losses, valid_losses, test_losses)
 
     return classifier, losses
-
-def predict():
-    """
-    An example of how to load a trained model and use it
-    to predict labels.
-    """
-
-    # loads the saved model
-    classifier = pickle.load(open('best_model.pkl'))
-
-    # compile a predictor function
-    predict_model = theano.function(
-            inputs = [classifier.input],
-            outputs = classifier.y_pred)
-
-    # We can test it on some examples from test set
-    dataset = 'mnist.pkl.gz'
-    datasets = load_data(dataset)
-    test_set_x, test_set_y = datasets[2]
-    test_set_x = test_set_x.get_value()
-
-    predicted_values = predict_model(test_set_x[:10])
-    print("Predicted values for the first 10 examples in test set:")
-    print(predicted_values)
 
 if __name__ == "__main__":
 
@@ -379,7 +258,7 @@ if __name__ == "__main__":
     plt.savefig('Varying_with_same_parameter.png')
     """
 
-    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.55, optimizer='gd') #batch_size=None
+    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.1, optimizer='rmsprop')
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     """
