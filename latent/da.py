@@ -5,7 +5,7 @@ import sys
 import timeit
 
 import numpy as np
-
+import math
 import climin, climin.util, climin.initialize
 import itertools
 import theano
@@ -13,7 +13,8 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 from utils import tile_raster_images
-from pca import load_data
+from load_data import load_data
+
 
 try:
     import PIL.Image as Image
@@ -51,6 +52,7 @@ class dA(object):
         self.cost = T.mean(- T.sum(self.x * T.log(self.reconstructed_values) + (1 - self.x) * T.log(1 - self.reconstructed_values), axis=1)) + self.l1_penalty * abs(self.hidden_values).sum()
         self.loss = theano.function([self.x], self.cost)
         self.gradients = theano.function([self.x], T.grad(self.cost, self.params))
+        self.reconstructed_input = theano.function([input],T.nnet.sigmoid(T.dot(self.hidden_values, self.W_prime) + self.b_prime));
 
     def get_corrupted_input(self, input, corruption_level):
         return self.theano_rng.binomial(size=input.shape, n=1, p=1 - corruption_level, dtype=theano.config.floatX) * input
@@ -61,12 +63,8 @@ class dA(object):
     def get_reconstructed_input(self, hidden):
         return T.nnet.sigmoid(T.dot(hidden, self.W_prime) + self.b_prime)
 
-
-
-
-
 def run_dA(learning_rate=0.1, n_epochs=5, optimizer='gd',
-            n_hidden=500, dataset='mnist.pkl.gz', batch_size=20,n_in = 28 * 28, corruption=0.0, l1_penalty=0.0):
+            n_hidden=500, dataset='mnist.pkl.gz', batch_size=20, n_in = 28 * 28, corruption=0.0, l1_penalty=0.0, print_reconstructions=False, print_filters=False):
 
     datasets = load_data(dataset)
     train_set_x, train_set_y = datasets[0]
@@ -74,14 +72,6 @@ def run_dA(learning_rate=0.1, n_epochs=5, optimizer='gd',
     n_train_batches = train_set_x.shape[0] // batch_size
 
     x = T.matrix('x')
-
-
-    #####################################
-    # BUILDING THE MODEL CORRUPTION 0% #
-    #####################################
-
-
-
     rng = np.random.RandomState(1234)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
@@ -134,17 +124,12 @@ def run_dA(learning_rate=0.1, n_epochs=5, optimizer='gd',
         print('unknown optimizer')
         opt = None
 
-
-
     print('...encoding')
     epoch = 0
     start_time = timeit.default_timer()
 
     for info in opt:
         iter = info['n_iter']
-        #if (iter % 1) == 0:
-        #    print("\r%f%% of Epoch %d" % (float(iter * 100) / n_train_batches - epoch * 100, epoch))
-
         if iter % n_train_batches == 1:
             epoch += 1
             this_loss = da.loss(train_set_x)
@@ -156,15 +141,36 @@ def run_dA(learning_rate=0.1, n_epochs=5, optimizer='gd',
 
     training_time = (end_time - start_time)
 
-    print(('The no corruption code for file ' + os.path.split(__file__)[1] +
-           ' ran for %.2fm' % ((training_time) / 60.)), file=sys.stderr)
-    image = Image.fromarray(
-        tile_raster_images(X=da.W.get_value(borrow=True).T, img_shape=(28, 28), tile_shape=(10, 10), tile_spacing=(1, 1))
-    )
-    image.save('filters corruption=0.3 and l1_pen=0.0.png')
+    if print_filters:
+        print(('The no corruption code for file ' + os.path.split(__file__)[1] +
+               ' ran for %.2fm' % ((training_time) / 60.)), file=sys.stderr)
+        image = Image.fromarray(
+            tile_raster_images(X=da.W.get_value(borrow=True).T, img_shape=(28, 28), tile_shape=(int(math.sqrt(n_hidden)), int(math.sqrt(n_hidden))), tile_spacing=(1, 1))
+        )
+        image.save('filters_'+optimizer+' n_hidden=' + str(n_hidden) + 'corruption=' + str(corruption) + ' and l1_pen='+str(l1_penalty)+'.png', dpi=(300,300))
 
-    os.chdir('../')
+    if print_reconstructions:
+        data = train_set_x[:100]
+        reconstruction = da.reconstructed_input(data)
+        image = Image.fromarray(
+            tile_raster_images(X=reconstruction, img_shape=(28, 28),
+                               tile_shape=(10,10), tile_spacing=(1, 1))
+        )
+        image.save('reconstructions of first 100_' + optimizer + ' n_hidden=' + str(n_hidden) + 'corruption=' + str(
+            corruption) + ' and l1_pen=' + str(l1_penalty) + '.png', dpi=(300, 300))
+
+
 
 
 if __name__ == '__main__':
-    run_dA(n_epochs=3,n_hidden=100, corruption=0.3, l1_penalty=0.0)
+    #run_dA(n_epochs=20,n_hidden=100, corruption=0.0, l1_penalty=0.0, optimizer='rmsprop')
+    #run_dA(n_epochs=20, n_hidden=100, corruption=0.3, l1_penalty=0.6, optimizer='rmsprop')
+    run_dA(n_epochs=10, n_hidden=1600, corruption=0.3, l1_penalty=0.0, optimizer='rmsprop', print_reconstructions=True)
+    run_dA(n_epochs=10, n_hidden=1600, corruption=0.3, l1_penalty=0.3, optimizer='rmsprop', print_reconstructions=True)
+    run_dA(n_epochs=10, n_hidden=1600, corruption=0.3, l1_penalty=0.6, optimizer='rmsprop', print_reconstructions=True)
+
+
+    #run_dA(n_epochs=20, n_hidden=100, corruption=0.3, l1_penalty=0.0, optimizer='gd')
+    #run_dA(n_epochs=20, n_hidden=100, corruption=0.3, l1_penalty=0.3, optimizer='gd')
+    #run_dA(n_epochs=20, n_hidden=1600, corruption=0.3, l1_penalty=0.0, optimizer='gd')
+    #run_dA(n_epochs=20, n_hidden=1600, corruption=0.3, l1_penalty=0.3, optimizer='gd')
