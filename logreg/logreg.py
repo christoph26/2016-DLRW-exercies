@@ -256,7 +256,7 @@ if __name__ == "__main__":
     plt.savefig('Varying_with_same_parameter.png')
     """
 
-    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.1, optimizer='rmsprop')
+    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.55, optimizer='gd')
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     """
