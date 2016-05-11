@@ -68,6 +68,22 @@ Increasing the number of hidden units yields similar phenomenon than above. With
 
 ##Problem 24
 
+The the following are the reconstructions of the first 100 samples of an autoencoder with 1600 hidden neurons, corruption of 0.3 and L1 penalty of 0.0 (left), 0,3 (middle) and 0,6 (right). The plots are saved in the subfolder "reconstructions autoencoder".
+
+<p align="center">
+  <img src="reconstructions autoencoder/reconstructions of first 100_rmsprop n_hidden=1600corruption=0.3 and l1_pen=0.0.png"/>
+  <img src="reconstructions autoencoder/reconstructions of first 100_rmsprop n_hidden=1600corruption=0.3 and l1_pen=0.3.png"/>
+  <img src="reconstructions autoencoder/reconstructions of first 100_rmsprop n_hidden=1600corruption=0.3 and l1_pen=0.6.png"/>
+</p>
+
+With increasing value of L1 penalty factor (lambda), the reconstruction get more and more blurred. The reason of this phenomenon lies again in the compression of feature information to only a few inner neuron, which was already described above. Without penalty, the input features can be represented by 1600 hidden neurons easily. With growing L1 penalty, the network has balance between the reconstruction error and the values in the inner neurons.
+
+Additionally, the file autoencoderrec.png contains a reconstruction of a network with 0.3 corruption, L1 penalty factor 0.3 but only 100 inner neurons. It gives evidence that the NMIST data  contains heavliy redundant dimensions. The data could be reconstructed greatly from only 100 inner neurons:
+
+<p align="center">
+  <img src="autoencoderrec.png"/>
+</p>
+
 ##Problem 25
 
 the file "autoencoderfilter.png" contains the receptive fields of an execution with 100 inner neurons, rmsprop optimization, corruption of 0.3 and L1_penalty of 0.3. More prints of receptive fields have already been mentioned in Problem 23.
