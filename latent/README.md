@@ -41,7 +41,7 @@ The following plots contain the plots of the respective fields with no corruptio
   <img src="filters autoencoder/filters_rmsprop n_hidden=100corruption=0.3 and l1_pen=0.0.png"/>
 </p>
 
-Generally, the respective fields look quite simple. However, in the pictures with corruption the dark parts in the weights are smaller. Single neurons focus on smaller features in the data. 
+Generally, the respective fields look quite similar. However, in the pictures with corruption the dark parts in the weights are smaller. In this case, single neurons focus on smaller features in the data. Also, it can be observed that corruption reduces the background noise in the respective fields.
 
 ###L1-penalty
 Introducing L1 penalties leads to great results. By forcing most of the hidden units to be close zero, the information about input data is concentrated in only a few nodes. As a consequence the weights of the inner nodes become more and more similar to concrete data.

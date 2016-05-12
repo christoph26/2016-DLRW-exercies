@@ -7,6 +7,8 @@ To run t-SNE on a large number of data samples, an optimized version of the algo
 
 g++ sptree.cpp tsne.cpp -o bh_tsne -O2
 
+Information about compiling in Windows can be found here: https://github.com/lvdmaaten/bhtsne/
+
 The algorithms can be executed for the MNIST-dataset with the method "produce_MNIST_plot(n_samples=None, fancy_markers=False, output_name='plot.png')". It performs BH-SNE as described in the paper and saves the results in a plot.
 
 n_samples: number of samplex, which are used in the algorithms. If the value is "None", all samples are used.
