@@ -16,12 +16,45 @@ n_epochs: maximal number of epochs.
 
 ##Problem 15
 
+###Weight initialization
 For such a neuronal network it is crucial to initialize the weights correctly. With and normal inizialization of all parameters with the call
 
 cli.initialize.randomize_normal(flat, 0, 1)
 
 the neuronal network cannot learn properly and only archieves validation and test errors of over 5%. An error plot of such a run is in the subfolder "Visualizations Problem 15".
 
+<p align="center">
+  <img src="Visualizations Problem 15/error_rate_with_bad_weight_initialization.png"/>
+</p>
+
+However, if the weights are initialized with an uniformal distribution as described in the Y. Bengio, X. Glorot, Understanding the difficulty of training deep feedforward neuralnetworks, AISTATS 2010, the MLP performs greatly. The following plot shows the error rates for such an execution and no regularization. Here, a validation error of 1.7% and a test error of 1.84% could be achieved.
+
+<p align="center">
+  <img src="error_gd_adjusted_init_weights_1.png"/>
+</p>
+
+ 1.700000 % with test performance 1.840000 %
+ validation score of 82.940000 % with test performance 81.960000 %
+ 
+ epoch 196, minibatch 1/2500, validation error  1.560000 %, iter/patience 490000/975000
+    epoch 196, minibatch 1/2500, test error of best model 1.690000 %
+    epoch 197, minibatch 1/2500, validation error  1.710000 %, iter/patience 492500/980000
+
+
+###Regularization
+To prevent the mlp from overfitting, regularization can be introduced. The subfolder "Visualizations Problem 15" contains several error plots of executions with L1 and L2 regularisation terms of 1,  0.01, 0.001, 0,0001 and 0.00001. A summery of the results of this executions is given here.
+
+For all regularization terms, L2 regularization performed better than L1 regularization. Furthermore it could be overserved, that for the classification of MNIST data very small regularization factors are effective. Only with L2 regularization of 0.00001, better result compared to no regularization could be achieved.
+
+However, if the right regularization factor is found, the mlp produces significantly better results. 
+
+0.00001:
+Optimization complete. Best validation score of 1.670000 % with test performance 1.750000 %
+The code for file mlp.py ran for 9.22m
+Optimization complete. Best validation score of 1.710000 % with test performance 1.840000 %
+
+
+###Optimization method
 However, if the weights are initialized with an uniformal distribution as described in the tutorial, the MLP performs greatly achieveing error rates of less than 1.8 already after 20 epochs, and final test and validation rates of 1.6% - 1.7%. The following table shows a few result of classifications with 300 hidden neurons, gradient descent and tanh as activation function for varying regularizations. Respective error plots and visualizations of the weights are in the subfolder "Visualizations Problem 15".
 
 
@@ -35,16 +68,17 @@ However, if the weights are initialized with an uniformal distribution as descri
 
 The runs show, that the MLP-classifications works better with regularization. Whereas runs with no or less regularization produced test errors of 1.8, runs with stronger regularization could achieve better test errors. a second observation is that in this szenario l2 regularization lead to better improvements compared to l1 regularization. The optimal value in these executions was 1.73% and could only be achieved by runs with l2_reg=1.0. 
 
+###Execution time
 Furthermore it can be seen, that the runtime is highly random due to the randomized mini-batches. The first run with l1_reg= 0.0 and l2-reg=1.0 for example took 500 epochs. Here the validation error was constantly improved in a way that the early stopping mechanism was not activated. In contrast, the second run with the same parameters only took 30 epochs producing the same test error score of 1.73. Respective plots of the two executions are in the subfolder "Visualizations Problem 15" in the files "error_gd_adjusted_init_weights_3.png" and "error_gd_adjusted_init_weights_6.png".
 
-As a consequence a further optimization could be to improve the stopping creteria. For the setting of this exercise the major minimization is done in the first few epochs. An alternative could therefore be, to skip early stopping and set the maximal number of epochs to 50.
+As a consequence a further optimization could be to improve the stopping creteria. For the setting of this exercise the major minimization is done in the first few epochs. An alternative could therefore be, to skip early stopping and set the maximal number of epochs to e.g. 50.
 
 
 #Problem 16
 
 The following evaluations use gradient descent, 300 activation function and l2 regulation with a factor 1.0.
 
-The weight initialization for the tanh and sigmoid functions is done according to Bengio, X. Glorot, Understanding the difficulty of training deep feedforward neuralnetworks, AISTATS 2010. Being similarly shaped as a tanh, the retified linear unit weights are initialized the same as in the run with tanh activation functions.
+The weight initialization for the tanh and sigmoid functions is done according to Y. Bengio, X. Glorot, Understanding the difficulty of training deep feedforward neuralnetworks, AISTATS 2010. Being similarly shaped as a tanh, the retified linear unit weights are initialized the same as in the run with tanh activation functions.
 
 | activation function    | best validation score         | test error        |
 |------------------------|-------------------------------|-------------------|
