@@ -1,27 +1,15 @@
+#t-SNE
 
-This software package contains a Barnes-Hut implementation of the t-SNE algorithm. The implementation is described in [this paper](http://lvdmaaten.github.io/publications/papers/JMLR_2014.pdf).
+##Problem 27-29
+To run t-SNE on a large number of data samples, an optimized version of the algorithms is necessary. Having a runtime of O(n²) the standard algorithms is to expensive for large datasets, as e.g. required for Problem 29.
 
+"bhtsne.py" contains an implementation of the Barnes-Hut-SNE algorithm using the BH-SNE implementation and the python wrapper from "http://lvdmaaten.github.io/tsne". Before execution, the BH-SNE implementation must be compiled by the commando:
 
-# Installation #
-
-Compile the source using the following command:
-
-```
 g++ sptree.cpp tsne.cpp -o bh_tsne -O2
-```
 
-That's all!
+The algorithms can be executed for the MNIST-dataset with the method "produce_MNIST_plot(n_samples=None, fancy_markers=False, output_name='plot.png')". It performs BH-SNE as described in the paper and saves the results in a plot.
 
-# Usage #
+n_samples: number of samplex, which are used in the algorithms. If the value is "None", all samples are used.
+fancy_markers: Flag that specifies the design of the result plot. If the flag is false, a colourfull scatterplot is produced. If it is true, a plot with the imput data as markers analogous to figure 5 of the paper is produced.
+output_name: File name of the result plot
 
-The code comes with wrappers for Matlab and Python. These wrappers write your data to a file called `data.dat`, run the `bh_tsne` binary, and read the result file `result.dat` that the binary produces. There are also external wrappers available for [Torch](https://github.com/clementfarabet/manifold) and [R](https://github.com/jkrijthe/Rtsne). Writing your own wrapper should be straightforward; please refer to one of the existing wrappers for the format of the data and result files.
-
-Demonstration of usage in Matlab:
-
-```matlab
-filename = websave('mnist_train.mat', 'https://github.com/awni/cs224n-pa4/blob/master/Simple_tSNE/mnist_train.mat?raw=true');
-load(filename);
-numDims = 2; pcaDims = 50; perplexity = 50; theta = .5;
-map = fast_tsne(digits', numDims, pcaDims, perplexity, theta);
-gscatter(map(:,1), map(:,2), labels');
-```
