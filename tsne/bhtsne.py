@@ -194,4 +194,4 @@ def produce_MNIST_plot(n_samples=None, fancy_markers=False, output_name='plot.pn
         plot.savefig(output_name)
 
 if __name__ == '__main__':
-    produce_MNIST_plot(n_samples=10000, fancy_markers=True, output_name='mnist_plot_fancy.png')
+    produce_MNIST_plot(n_samples=None, fancy_markers=True, output_name='mnist_plot_standard.png')
