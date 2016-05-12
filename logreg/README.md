@@ -3,19 +3,20 @@
 ##Problem 8:
 
 The file logreg.py contains the implementation of logistic regression for the MNIST dataset using standard gradient descent with minibatches. The implementation uses Theano and Climin.
-The method "def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl.gz', batch_size=600, optimizer='gd'):" starts a run of logistic regression for the mnist data.
+The method "sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl.gz', batch_size=600, optimizer='gd'):" starts a run of logistic regression for the mnist data.
 
 To run successfully the folder ../data/ has to exist. During the first execution, the MNIST dataset is downloaded in this folder.
 
 
 ##Problem 9:
-In the implementation of the previous problem some parameters can be defined. Examples are the batch_size and the learning rate. Varying them leads to different result.
 
 ###Learning rate
-The file "learning_rate_1.png" shows the archieved test error for different error rates. The batch size was fixed to 600 in this measurement. This first measure states an optimal learning rate in the interval [0.5,1.0]. A second experiment with smaller step size analyses this circumstance more detailled. The conrete results are displayed in the file "learning_rate_2.png" (the legend is incorrect labeled and should read "test error"). The results of this measurement with step sized between [0.5,1.0] return an optimal learning rate of 0.55. With this value a validation error of 8.06% and a test error of 8.29% could be archieved. 
+The file "learning_rate.png" shows the achieved test error for different error rates. The batch size was fixed to 600 in this measurement. The plot shows that small learning rates are superior to big values. 
 <p align="center">
-  <img src="learning_rate_2.png"/>
+  <img src="learning_rate.png"/>
 </p>
+
+Considering this, the default value for the learning rate in my implementation is set to 0.01 (also default value in the tutorial).
 
 ###Batch size
 There seems to be no strong correlation between the batch size and the test error. Runs with different batch sizes showed no variations except random variation due to the use of random batches. Results are given in the following table:
@@ -41,9 +42,7 @@ Without minibatches the results are a lot better, since all of the available dat
 ###Execution time
 On my laptop (Intel® Core™ i5-4210M CPU @ 2.60GHz × 4) the linear regression ran with approximately 1,85 epochs per second.
 
-The execution time depends strongly on the number of epochs and therefore on the stopping criterion. Depending on how often the early stopping variable "patience" is increased during the implemenation, one run takes between 60 and 180 epochs. 60 epochs corresponds with the minimal number of optimization iterations of 5000 (~ 60 epochs * 83 minibatches per epoch). 180 epochs corresponds to approximately three increasing steps of the patience due to a significant enough optimization within one step.
-
-Since smaller learning rates during the gradient descent lead to smaller and steadier optimization steps, they usually increase the patience less often. Beeing equally accurate compared to bigger learning rates, they need less computation effort and are therefore more efficient.
+The execution time depends strongly on the number of epochs and therefore on the stopping criterion.  Depending on how often the early stopping variable "patience" is increased during the implemenation, one run takes between 60 and 300 epochs. 60 epochs corresponds with the minimal number of optimization iterations of 5000 (~ 60 epochs * 83 minibatches per epoch). 180 epochs corresponds to approximately 3-5 increasing steps of the patience due to a significant enough optimization within one step.
 
 ##Problem 10:
 
