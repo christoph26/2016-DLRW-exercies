@@ -63,7 +63,7 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000, dataset='mnist.pkl.gz', batch_size=600, optimizer='gd'):
+def sgd_optimization_mnist(learning_rate=0.01, n_epochs=1000, dataset='mnist.pkl.gz', batch_size=600, optimizer='gd'):
 
     datasets = load_data(dataset)
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     """
     # Plot for varying learning rate of gradient descent
 
-    for i in range(8,20,1):
+    for i in range(1,20,1):
         learning_rate= i/20.0
         gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=learning_rate, optimizer='gd')
         gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
@@ -237,7 +237,7 @@ if __name__ == "__main__":
         plot_learning_rate_x.append(learning_rate)
         plot_learning_rate.append(gd_test_loss[len(gd_test_loss)-1])
 
-    plt.plot(plot_learning_rate_x,plot_learning_rate, '-', linewidth = 1, label = 'learning_rate')
+    plt.plot(plot_learning_rate_x,plot_learning_rate, '-', linewidth = 1, label = 'rest error')
     plt.legend()
     plt.savefig('learning_rate.png')
     """
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     plt.savefig('Varying_with_same_parameter.png')
     """
 
-    gd_classifier, gd_losses = sgd_optimization_mnist(learning_rate=0.55, optimizer='gd')
+    gd_classifier, gd_losses = sgd_optimization_mnist(optimizer='gd')
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     """
