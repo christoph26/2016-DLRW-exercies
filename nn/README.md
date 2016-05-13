@@ -30,7 +30,7 @@ the neuronal network cannot learn properly and only archieves validation and tes
 However, if the weights are initialized with an uniformal distribution as described in the Y. Bengio, X. Glorot, Understanding the difficulty of training deep feedforward neuralnetworks, AISTATS 2010, the MLP performs greatly. The following plot shows the error rates for such an execution and no regularization. Here, a validation error of 1.7% and a test error of 1.84% could be achieved.
 
 <p align="center">
-  <img src="error_gd_adjusted_init_weights_1.png"/>
+  <img src="Visualizations Problem 15/error_gd_adjusted_init_weights_1.png"/>
 </p>
 
 
@@ -46,16 +46,15 @@ Best validation score of 1.570000 % with test performance 1.640000 %
 An error plot is given below in problem 17. An exacter specification of the optimal regularisation factor is difficult because the results of two executions always vary up to some extend due to the random batches.
 
 ###Optimization method
-Comparing different optimizations methods yields mainly differences in the execution time. Gradient descent needs on my laptop approximately 13 seconds per epoch, rmsprop in contrast 24 seconds. Since both run for similar number of epochs and produce similar accuracies, gradient descent as the faster option is used in the following. An error plot of an execution with rmsprop is also included in the folder "Visualizations Problem 15".
+Comparing different optimizations methods yields mainly differences in the execution time. Gradient descent needs on my laptop approximately 13 seconds per epoch, rmsprop in contrast 24 seconds. Achieving best validation scores of 1.64% with test performances 1.75%, rmsprop performs slightly worse than gradient descent.  Since that, gradient descent as the faster and more accurate option is used in the following. An error plot of an execution with rmsprop is also included in the folder "Visualizations Problem 15".
 
-Result of the run
-Best validation score of 1.640000 % with test performance 1.740000 %
-The code for file mlp.py ran for 151.52m epoch 300
-
+<p align="center">
+  <img src="Visualizations Problem 15/error_rmsprop_adjusted_init_weights.png"/>
+</p>
 
 
 ###Execution time
-With correct regularization the execution
+Suitable regularization the execution leads to a more constant optimization process. The main part of the minimization still is done in the first epochs, but can be continued longer. Thus, execution imes of runs with regularization run usually longer than without. This can also be observed in the error plots above. Often with regularization the maximal number of epochs is reached before the early stopping mechanism is activated and stops the execution. 
 
 #Problem 16
 The weight initialization for the tanh and sigmoid functions is done according to Y. Bengio, X. Glorot, Understanding the difficulty of training deep feedforward neuralnetworks, AISTATS 2010. Being similarly shaped as a tanh, the retified linear unit weights are initialized the same as in the run with tanh activation functions. Results for execution with different activation functions are in the following table:
@@ -88,4 +87,4 @@ The files repflds_tanh.png, repflds_sigmoid.png, and repflds_relu.png contain vi
 
 ##Problem 19
 
-By initializing the weights optimal, the achieved error rate can be reduced to less than 2%. With regularization, the error rates even drop under 1.7%. Concrete executions with such results are given above in the capters of problem 15 and 16.
+By initializing the weights optimal, the achieved error rate can be reduced to less than 2%. With regularization, the error rates even drop under 1.7%. Concrete executions with such results are given above in the capters of problem 15 and 16. Adjusting the weights manually is not sensefull and bad scientific practise as already described in the logreg chapter.

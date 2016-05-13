@@ -317,11 +317,11 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=500,
 
 if __name__ == '__main__':
 
-    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=0.00, activation=T.tanh, n_epochs=300)
+    #gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=0.00, activation=T.tanh, n_epochs=300)
 
     """
     #Evaluation example for problem 15
-    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=1.0, L2_reg=0.00, activation=T.tanh, n_epochs=300)
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=0.00, activation=T.tanh, n_epochs=300)
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
@@ -329,8 +329,8 @@ if __name__ == '__main__':
     plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
 
     plt.legend()
-    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=0.00, 300 tanh inner neurons')
-    plt.savefig('error_gd_adjusted_init_weights_X.png')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00, 300 tanh inner neurons')
+    plt.savefig('error_gd_adjusted_init_weights_1.png')
 
     f_repfields, subplot_array = plt.subplots(15, 20)
     weights = gd_mlp.hiddenLayer.W.get_value().transpose()
@@ -342,8 +342,8 @@ if __name__ == '__main__':
         subplot_array[row][column].imshow(weights[i].reshape((28,28)), cmap = 'Greys_r')
         subplot_array[row][column].axis('off')
 
-    plt.suptitle('gd-MLP with l1_reg=1.0, l2_reg=0.00, 300 tanh inner neurons')
-    plt.savefig('repfields_gd_adjusted_init_weights_X.png')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00, 300 tanh inner neurons')
+    plt.savefig('repfields_gd_adjusted_init_weights_1.png')
 
     plt.clf()
     """
@@ -351,7 +351,7 @@ if __name__ == '__main__':
     """
     #Evaluation example for problem 16
 
-    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=1.00, activation=T.nnet.sigmoid, n_epochs=300)
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=0.00001, activation=T.nnet.sigmoid, n_epochs=300)
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
@@ -359,7 +359,7 @@ if __name__ == '__main__':
     plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
 
     plt.legend()
-    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 sigmoidal inner neurons')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00001, 300 sigmoidal inner neurons')
     plt.savefig('error_sigmoid.png')
 
     f_repfields, subplot_array = plt.subplots(15, 20)
@@ -372,12 +372,12 @@ if __name__ == '__main__':
         subplot_array[row][column].imshow(weights[i].reshape((28, 28)), cmap='Greys_r')
         subplot_array[row][column].axis('off')
 
-    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 sigmoidal inner neurons')
-    plt.savefig('repfields_sigmoid png')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00001, 300 sigmoidal inner neurons')
+    plt.savefig('repfields_sigmoid.png')
 
     plt.clf()
 
-    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=1.00, activation=relu, n_epochs=300)
+    gd_mlp, gd_losses = test_mlp(optimizer='gd', n_hidden=300, L1_reg=0.0, L2_reg=0.00001, activation=relu, n_epochs=300)
     gd_train_loss, gd_valid_loss, gd_test_loss = gd_losses
 
     plt.plot(gd_train_loss, '-', linewidth=1, label='train error')
@@ -385,7 +385,7 @@ if __name__ == '__main__':
     plt.plot(gd_test_loss, '-', linewidth=1, label='test error')
 
     plt.legend()
-    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 rectified linear inner neurons')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00001, 300 rectified linear inner neurons')
     plt.savefig('error_relu.png')
 
     f_repfields, subplot_array = plt.subplots(15, 20)
@@ -398,7 +398,7 @@ if __name__ == '__main__':
         subplot_array[row][column].imshow(weights[i].reshape((28, 28)), cmap='Greys_r')
         subplot_array[row][column].axis('off')
 
-    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=1.00, 300 rectified linear inner neurons')
+    plt.suptitle('gd-MLP with l1_reg=0.0, l2_reg=0.00001, 300 rectified linear inner neurons')
     plt.savefig('repfields_relu.png')
 
     plt.clf()
